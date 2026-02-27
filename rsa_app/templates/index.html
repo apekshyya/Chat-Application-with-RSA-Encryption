@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Encrypted Chat Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            overflow: hidden;
+        }
+
+        .auth-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .auth-form {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-form h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .auth-toggle a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .chat-section {
+            display: flex;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 25%;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #667eea;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-item {
+            padding: 15px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .chat-item:hover {
+            background: #e8f0ff;
+            border-left-color: #667eea;
+        }
+
+        .chat-item.active {
+            background: #e8f0ff;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        .chat-item-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .chat-item-preview {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .new-chat-btn {
+            margin: 10px;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 60%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message-content.own {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message-content.other {
+            background: #f0f0f0;
+            color: #333;
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            padding: 0 16px;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .message-input-section {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .users-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .user-item {
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .user-item input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            padding: 15px;
+            background: #fadbd8;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success-message {
+            color: #27ae60;
+            padding: 15px;
+            background: #d5f4e6;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #ddd transparent;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-section">
+            <div class="auth-form">
+                <div id="loginForm">
+                    <h1>Login</h1>
+                    <div id="loginError" class="error-message"></div>
+                    <form onsubmit="loginUser(event)">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="loginUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </form>
+                    <div class="auth-toggle">
+                        Don't have an account? <a onclick="toggleAuthForm()">Register</a>
+                    </div>
+                </div>
+
+                <div id="registerForm" style="display: none;">
+                    <h1>Register</h1>
+                    <div id="registerError" class="error-message"></div>
+                    <form onsubmit="registerUser(event)">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="registerUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="registerEmail">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="registerPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="registerPasswordConfirm" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </form>
+                    <div class="auth-toggle">
+                        Already have an account? <a onclick="toggleAuthForm()">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chatSection" class="chat-section" style="display: none;">
+            <!-- Sidebar -->
+            <div class="sidebar scrollbar">
+                <div class="sidebar-header">
+                    <h2>Chats</h2>
+                    <button class="logout-btn" onclick="logoutUser()">Logout</button>
+                </div>
+                <button class="new-chat-btn" onclick="openNewChatModal()">+ New Chat</button>
+                <div id="chatsList" class="chats-list scrollbar"></div>
+            </div>
+
+            <!-- Main Chat -->
+            <div class="main-chat">
+                <div id="emptyChat" class="empty-state">
+                    <div class="empty-state-icon">💬</div>
+                    <div>Select a chat to start messaging</div>
+                </div>
+
+                <div id="chatContainer" style="display: none; flex: 1; display: flex; flex-direction: column;">
+                    <div class="chat-header">
+                        <h3 id="currentChatName"></h3>
+                    </div>
+                    <div id="messagesList" class="messages scrollbar"></div>
+                    <div class="message-input-section">
+                        <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." autocomplete="off">
+                        <button class="send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Chat Modal -->
+    <div id="newChatModal" class="modal">
+        <div class="modal-content">
+            <h2>Start a New Chat</h2>
+            <div class="form-group">
+                <label>Chat Name</label>
+                <input type="text" id="chatName" placeholder="Enter chat name">
+            </div>
+            <label>Select Users</label>
+            <div id="usersList" class="users-list"></div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="createChat()">Create Chat</button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeNewChatModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let authToken = null;
+        let currentUser = null;
+        let currentChat = null;
+        let currentPrivateKey = null;
+        let userProfiles = {}; // Store public keys for all users
+
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Authentication Functions
+        async function loginUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                // Get auth token
+                const tokenResponse = await fetch(`${API_BASE.replace('/api', '')}/api/auth/token/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!tokenResponse.ok) {
+                    throw new Error('Invalid credentials');
+                }
+
+                const tokenData = await tokenResponse.json();
+                authToken = tokenData.token;
+
+                // Get user profile with private key
+                const profileResponse = await fetch(`${API_BASE}/profile/`, {
+                    headers: { 'Authorization': `Token ${authToken}` }
+                });
+
+                const profileData = await profileResponse.json();
+                currentUser = { username };
+                currentPrivateKey = profileData.private_key;
+
+                // Fetch user profiles (public keys)
+                await fetchUserProfiles();
+
+                // Load chats
+                await loadChats();
+                showChatSection();
+
+                // Clear form
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+            } catch (error) {
+                showError('loginError', error.message);
+            }
+        }
+
+        async function registerUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+            if (password !== passwordConfirm) {
+                showError('registerError', 'Passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/register/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        password,
+                        password_confirm: passwordConfirm
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(Object.values(error)[0]);
+                }
+
+                showSuccess('registerError', 'Registration successful! Please login.');
+                toggleAuthForm();
+            } catch (error) {
+                showError('registerError', error.message);
+            }
+        }
+
+        function toggleAuthForm() {
+            document.getElementById('loginForm').style.display = 
+                document.getElementById('loginForm').style.display === 'none' ? 'block' : 'none';
+            document.getElementById('registerForm').style.display =
+                document.getElementById('registerForm').style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logoutUser() {
+            authToken = null;
+            currentUser = null;
+            currentPrivateKey = null;
+            currentChat = null;
+            document.getElementById('authSection').style.display = 'flex';
+            document.getElementById('chatSection').style.display = 'none';
+        }
+
+        // Chat Functions
+        async function fetchUserProfiles() {
+            try {
+                const response = await fetch(`${API_BASE}/users/`, {
+                    headers: { 'Authorization': `Token ${authToken}` }
+                });
+                const users = await response.json();
+                for (const user of users) {
+                    const profileResponse = await fetch(`${API_BASE}/users/${user.id}/public-key/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    const profileData = await profileResponse.json();
+                    userProfiles[user.id] = {
+                        ...user,
+                        public_key: profileData.public_key
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching user profiles:', error);
+            }
+        }
+
+        async function loadChats() {
+            try {
+                const response = await fetch(`${API_BASE}/chats/`, {
+                    headers: { 'Authorization': `Token ${authToken}` }
+                });
+                const chats = await response.json();
+                const chatsList = document.getElementById('chatsList');
+                chatsList.innerHTML = '';
+
+                chats.forEach(chat => {
+                    const chatItem = document.createElement('div');
+                    chatItem.className = 'chat-item';
+                    chatItem.onclick = () => selectChat(chat);
+
+                    const lastMsg = chat.last_message;
+                    chatItem.innerHTML = `
+                        <div class="chat-item-name">${chat.name}</div>
+                        <div class="chat-item-preview">
+                            ${lastMsg ? `${lastMsg.sender}: ${lastMsg.preview}` : 'No messages yet'}
+                        </div>
+                    `;
+                    chatsList.appendChild(chatItem);
+                });
+            } catch (error) {
+                console.error('Error loading chats:', error);
+            }
+        }
+
+        async function selectChat(chat) {
+            currentChat = chat;
+            document.getElementById('emptyChat').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+            document.getElementById('currentChatName').textContent = chat.name;
+
+            // Load messages
+            await loadMessages(chat.id);
+
+            // Update active chat in sidebar
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.chat-item').classList.add('active');
+        }
+
+        async function loadMessages(chatId) {
+            try {
+                const response = await fetch(`${API_BASE}/messages/by_chat/?chat_id=${chatId}`, {
+                    headers: { 'Authorization': `Token ${authToken}` }
+                });
+                const messages = await response.json();
+                const messagesList = document.getElementById('messagesList');
+                messagesList.innerHTML = '';
+
+                for (const message of messages) {
+                    await displayMessage(message);
+                }
+
+                // Scroll to bottom
+                messagesList.scrollTop = messagesList.scrollHeight;
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        async function displayMessage(message) {
+            const messagesList = document.getElementById('messagesList');
+            const messageDiv = document.createElement('div');
+            const isOwn = message.sender.username === currentUser.username;
+
+            messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+
+            // Decrypt message
+            let content = message.content;
+            if (message.encrypted_content && !isOwn) {
+                try {
+                    const decryptResponse = await fetch(`${API_BASE}/messages/${message.id}/decrypt/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    const decrypted = await decryptResponse.json();
+                    content = decrypted.content;
+                } catch (error) {
+                    content = '[Encrypted message - decryption failed]';
+                }
+            }
+
+            const time = new Date(message.created_at).toLocaleTimeString();
+            messageDiv.innerHTML = `
+                <div>
+                    ${!isOwn ? `<div class="message-sender">${message.sender.username}</div>` : ''}
+                    <div class="message-content ${isOwn ? 'own' : 'other'}">
+                        ${escapeHtml(content)}
+                    </div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            messagesList.appendChild(messageDiv);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message || !currentChat) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/messages/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat: currentChat.id,
+                        content: message,
+                        use_hybrid: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+
+                const newMessage = await response.json();
+                input.value = '';
+
+                // Display the message
+                await displayMessage({
+                    ...newMessage,
+                    content: message,
+                    sender: { username: currentUser.username }
+                });
+
+                // Scroll to bottom
+                document.getElementById('messagesList').scrollTop = 
+                    document.getElementById('messagesList').scrollHeight;
+
+                // Refresh chat list
+                await loadChats();
+            } catch (error) {
+                alert('Error sending message: ' + error.message);
+            }
+        }
+
+        async function openNewChatModal() {
+            try {
+                // Load users list
+                const response = await fetch(`${API_BASE}/users/`, {
+                    headers: { 'Authorization': `Token ${authToken}` }
+                });
+                const users = await response.json();
+                const usersList = document.getElementById('usersList');
+                usersList.innerHTML = '';
+
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+                    userItem.innerHTML = `
+                        <label>${user.username}</label>
+                        <input type="checkbox" value="${user.id}">
+                    `;
+                    usersList.appendChild(userItem);
+                });
+
+                document.getElementById('newChatModal').classList.add('show');
+            } catch (error) {
+                alert('Error loading users: ' + error.message);
+            }
+        }
+
+        function closeNewChatModal() {
+            document.getElementById('newChatModal').classList.remove('show');
+            document.getElementById('chatName').value = '';
+        }
+
+        async function createChat() {
+            const chatName = document.getElementById('chatName').value.trim();
+            if (!chatName) {
+                alert('Please enter a chat name');
+                return;
+            }
+
+            const selectedUsers = Array.from(
+                document.querySelectorAll('#usersList input[type="checkbox"]:checked')
+            ).map(checkbox => parseInt(checkbox.value));
+
+            if (selectedUsers.length === 0) {
+                alert('Please select at least one user');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/chats/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: chatName,
+                        participant_ids: selectedUsers,
+                        is_private: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create chat');
+                }
+
+                closeNewChatModal();
+                await loadChats();
+            } catch (error) {
+                alert('Error creating chat: ' + error.message);
+            }
+        }
+
+        // Utility Functions
+        function showChatSection() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'flex';
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.background = '#d5f4e6';
+            element.style.color = '#27ae60';
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Enter key to send message
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
